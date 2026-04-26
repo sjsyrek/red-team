@@ -1,6 +1,6 @@
 # Red Team
 
-> Spawn independent specialist Claude agents to attack your application in parallel — they work without shared context, the Incident Commander cross-correlates their findings, you get a triage report with compound risk chains.
+> Independent specialist Claude agents attack your app in parallel — the Incident Commander cross-correlates findings to surface compound risks no single review catches.
 
 ## What problem it solves
 
