@@ -54,6 +54,22 @@ Notable libraries with outsized blast radius (auth, crypto, parsing, deserializa
 From CLAUDE.md / user instruction:
 - <item> — <reason>
 
+## Known issues from tracker
+
+(Populated only when beads is detected — `test -d .beads || command -v bd`. Otherwise omit the entire section. Recipe: `references/tracker-integration.md`.)
+
+### From `bd memories` (security-keyword filtered)
+- <bd-XXX> — <one-line memory text>
+
+### From `bd ready` (security-labeled or top open beads)
+- <bd-XXX> [P<n>] — <title>
+
+### Referenced by user
+- <bd-XXX> — <summarized bd show output: title, description, current status>
+
+### Self-audit contradictions (memory wins on conflict with SKILL.md)
+- <one-line contradiction> — follow memory; record in report's emergent-insights appendix
+
 ## Opt-in seats
 - `<seat>` — <one-line rationale based on detected context>
 ```
@@ -63,3 +79,4 @@ From CLAUDE.md / user instruction:
 - The recon must be **precise and bounded**. Vague entries leak into spawn prompts and produce sloppy findings.
 - Trust boundaries are the single most important section. If you cannot draw a line between user-controlled and internal-only inputs, recon is incomplete — pause and ask the user before proceeding to fan-out.
 - The "Out of scope" section is enforceable: agents are instructed to ignore findings entirely contained in those areas.
+- The "Known issues from tracker" section is what prevents attackers from re-discovering already-filed bugs. When present, every attacker is instructed to skip findings that match a listed bead — or report them as `chain_potential` extensions referencing the existing bead's id, never as fresh findings.

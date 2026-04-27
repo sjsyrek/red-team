@@ -61,3 +61,17 @@ Examples:
 - **Deflating severity because "the auth is good".** If auth is trivially obtainable (any signup), treat it as effectively unauthenticated for blast-radius purposes.
 - **Borrowing CVSS scores wholesale.** CVSS is a vendor framework optimized for unknown attacker contexts. Yours is a known context — use the four-axis test against the actual deployment.
 - **Missing the data-classification axis.** Exposure of email addresses is different from exposure of payment data. When PII or PCI data is involved, push the severity up by one level.
+
+## Tracker priority mapping
+
+When beads is detected, severity maps to `bd --priority` at filing time (see `references/tracker-integration.md` for the full filing recipe):
+
+| Severity | `bd --priority` | Filed in 0.2.0? | Notes |
+|---|---|---|---|
+| critical | 0 | yes | Compound chains use 0 by default |
+| high | 1 | yes | Silent-promise guard requires a tracker id before finalization |
+| medium | 2 | yes | Auto-filed but not gated |
+| low | 3 | no | Future `--file-low` opt-in |
+| info / clean check | — | no | Stays prose-only in the report |
+
+The mapping is intentionally tight: `critical → P0` lines up with beads's "drop everything" priority, `high → P1` with "this sprint", `medium → P2` with "next sprint". Don't drift from this without surfacing the change in a council or memory entry — calibration consistency across runs is what makes the priority queue useful.

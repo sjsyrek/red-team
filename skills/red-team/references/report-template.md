@@ -12,6 +12,9 @@ scope: <repo root | path>
 agents_run: [input-attacker, auth-attacker, ...]
 agents_failed: []
 proactive_trigger: <reason or null>
+tracker: beads | none
+primary-tracker-ids: []      # beads filed by this run (empty when tracker=none or status=halted)
+linked-tracker-ids: []       # existing beads referenced by findings (from recon enrichment)
 ---
 
 # Red Team Report: <Application Name>
@@ -35,6 +38,8 @@ proactive_trigger: <reason or null>
 ### CHAIN: <Title>
 **Components**: <finding-id-A> + <finding-id-B>
 **Combined Severity**: CRITICAL
+**Tracker ID**: `bd-XXXX` (or `none` if no tracker detected)
+**Component beads**: [`bd-AAA`, `bd-BBB`]
 **Attack Narrative**: <prose description of how an attacker chains these. 3–5 sentences.>
 
 ---
@@ -46,6 +51,7 @@ proactive_trigger: <reason or null>
 ### [SEVERITY] [SURFACE]: <One-line title>
 **ID**: `<finding-id>`
 **CWE**: CWE-XXX
+**Tracker ID**: `bd-XXXX` (or `none` if no tracker detected)
 **Finding**: <1–2 sentence description>
 **Reproduction**:
 1. <Step one>
@@ -59,7 +65,7 @@ proactive_trigger: <reason or null>
 
 ## Medium Findings
 
-<Condensed format: id, title, one-line description, file reference, remediation sketch>
+<Condensed format: id, tracker-id, title, one-line description, file reference, remediation sketch>
 
 ---
 
@@ -92,6 +98,14 @@ proactive_trigger: <reason or null>
 <What was NOT reviewed and why. Helps distinguish "safe" from "unchecked".>
 
 - <surface> — <reason: out of scope, agent failed to spawn, requires runtime access, etc.>
+
+---
+
+## Appendix — Emergent insights
+
+<Optional. Surfaced from Phase 1 self-audit (memory contradictions with SKILL.md) or from structural lessons noticed during the run. Each entry is also written via `bd remember` when beads is detected so the next run picks it up. Empty when nothing emerged.>
+
+- <one-line lesson> — <context, ≤2 sentences>
 ```
 
 ## Notes
@@ -99,3 +113,5 @@ proactive_trigger: <reason or null>
 - The **Compound Risk Chains** section comes before individual findings because the chain narrative is the highest-signal output of the cross-correlation phase. A chain of two mediums combining into a critical is precisely the value-add over a single-context review.
 - The **Clean Checks** section is mandatory. Omission is ambiguous; an explicit "we looked here and found nothing" gives the team confidence and helps future reviews skip already-cleared surfaces.
 - The **Scope Gaps** section is the audit trail for "we never looked here." If an attacker failed to spawn or the user narrowed the scope, log it.
+- When **beads is detected**, every Critical/High/Medium finding has a filed `**Tracker ID**` before the report is finalized. The Phase 4c silent-promise guard (see `references/tracker-integration.md`) enforces this for Critical and High; Medium auto-files but is not gated. Compound chains file as their own beads with `bd dep add` linkage to component beads.
+- The **Appendix — Emergent insights** is the durable signal channel back into the skill itself. Entries also write via `bd remember` so the next run reads them at Phase 1 self-audit. Memory beats stale SKILL.md text on contradiction.

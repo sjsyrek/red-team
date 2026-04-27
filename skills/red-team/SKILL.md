@@ -1,7 +1,7 @@
 ---
 name: red-team
 description: Adversarial security and robustness review. Spawn independent specialist attacker agents to find every possible way to break an application — security vulnerabilities, logic flaws, race conditions, dependency risks, infrastructure misconfigs, and more. Use when the user says "red team this", "try to break it", "find vulnerabilities", "security audit", "attack surface", "what could go wrong", "pen test", or "stress test". Also triggers proactively (with plan-card pause for approval) when shipping code that handles authentication, payments, user-supplied input, external APIs, or sensitive data — even if the user didn't ask. Attack surface doesn't correlate with lines of code; invoke for small apps too. Do NOT skip when the user says "it's probably fine" — that's exactly when to run.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # red-team
@@ -63,6 +63,7 @@ Build the recon brief. This is the only shared context across all attackers — 
 
 Steps:
 
+0. **Tracker detection (fails-safe).** Run `test -d .beads || command -v bd` from the project's git root. If either succeeds, beads is this run's tracker — gather context per `references/tracker-integration.md` (Phase 1 recon enrichment + skill self-audit) and inline into a `## Known issues from tracker` section of `recon.md`. If neither succeeds, skip silently — no tracker commands are invented. **When self-audit detects a memory entry that contradicts a prescription in this file, memory wins**; flag the contradiction in `recon.md` so every attacker sees it, follow memory, and record the drift in the report's `Appendix — Emergent insights`.
 1. Read `CLAUDE.md` if present — extract architecture constraints, known risks, out-of-scope areas.
 2. Scan project structure:
    - Tech stack (languages, frameworks, ORMs, auth libraries)
@@ -74,7 +75,7 @@ Steps:
 
 Write the brief to `~/.claude/red-team/<slug>/recon.md`. Every attacker's spawn prompt points to this path so identical reads hit the prompt cache across parallel spawns.
 
-Brief format: see `references/recon-template.md`.
+Brief format: see `references/recon-template.md`. Tracker enrichment recipe: `references/tracker-integration.md`.
 
 ## Phase 2 — Attack fan-out (parallel)
 
@@ -84,8 +85,9 @@ Spawn all selected agents simultaneously in **one multi-tool-call message** via 
 - A `Read` instruction for the recon brief at `~/.claude/red-team/<slug>/recon.md`
 - The **finding schema** (below)
 - Full tool access (file reads, bash, static analysis)
+- A **tracker-awareness rule** (when the recon brief contains a `## Known issues from tracker` section): before reporting any finding, check the listed beads. If your finding matches an existing bead, either skip it or report it with `chain_potential: true` and the bead id in the `evidence` field — never refile as a fresh finding.
 
-**Critical**: Agents do not communicate during this phase. Independence is the whole point. Shared context contaminates findings.
+**Critical**: Agents do not communicate during this phase. Independence is the whole point. Shared context contaminates findings. Filing beads is a Commander-only action at Phase 4 save — attackers never call `bd`.
 
 ### Finding schema
 
@@ -154,9 +156,11 @@ After all attackers report back, the Commander cross-correlates before writing t
 
 ## Phase 4 — Report
 
-Skeleton: `references/report-template.md`. Severity calibration: `references/severity-guide.md`.
+Skeleton: `references/report-template.md`. Severity calibration: `references/severity-guide.md`. Tracker filing recipe: `references/tracker-integration.md`.
 
-**Preview before write.** Post the draft report to chat:
+### 4a — Preview before write
+
+Post the draft report to chat:
 
 ```
 [draft report markdown]
@@ -164,9 +168,34 @@ Skeleton: `references/report-template.md`. Severity calibration: `references/sev
 Reply: save | amend <note> | discard
 ```
 
-On `save`: write to `~/.claude/red-team/<yyyy-mm-dd>-<slug>/report.md`. On `amend`: revise per the note, re-preview. On `discard`: clean up artifacts, no file written.
+On `save`: write to `~/.claude/red-team/<yyyy-mm-dd>-<slug>/report.md` and proceed to 4b. On `amend`: revise per the note, re-preview. On `discard`: clean up artifacts, no file written, no beads filed.
 
 The path is **per-user artifact space, outside the repo under review**. Attack reproductions should not land in git history by accident.
+
+### 4b — File findings to tracker (when beads is detected)
+
+After the report file is written, the Commander files findings as beads per `references/tracker-integration.md`:
+
+1. **Component findings first.** For each Critical / High / Medium finding: `bd create --type=bug --priority=<severity-mapped>` where critical=0, high=1, medium=2. Capture the new bead id.
+2. **Compound chains second.** Each chain files as its own `--type=bug --priority=0` bead, then `bd dep add <chain-bead> <component-bead>` for every component in the chain. The chain blocks-on its components.
+3. **Update the on-disk report.** Populate frontmatter `primary-tracker-ids` (this run's filings), `linked-tracker-ids` (existing beads referenced by findings), `tracker: beads`. Set each finding's `**Tracker ID**` to the just-filed bead id.
+
+When beads is **not** detected: skip 4b entirely. Frontmatter stays as `tracker: none`, IDs stay null, the report markdown is the only handle.
+
+### 4c — Silent-promise guard
+
+Before declaring the report finalized, grep the saved file. **Every Critical and High finding must have a non-empty `**Tracker ID**`** when beads is detected. Missing IDs:
+
+- File the bead now and update the report, **or**
+- Demote the finding's severity (with rationale recorded in the report) and re-run the guard.
+
+Do not exit Phase 4 with unfiled C/H findings. A C/H finding without a tracker handle is exactly the silent-promise rot this guard prevents.
+
+### 4d — Emergent-insights write-back
+
+If the run surfaced a structural lesson — a SKILL.md prescription contradicted by reality, a recon brief that produced false trust boundaries, an attacker that consistently re-reports known beads despite the recon enrichment — write it via `bd remember "<lesson, ≤200 chars>"` so the next run picks it up during Phase 1 self-audit. The lesson also lands in the report's `Appendix — Emergent insights`.
+
+Skipped when beads is not detected; the appendix entry is the only handle.
 
 ## Stop early
 
@@ -176,7 +205,8 @@ User says "stop the red team" at any phase:
 2. Collect whatever findings are already in
 3. Skip cross-correlation (or run abbreviated version on whatever is collected)
 4. Write partial report with frontmatter `status: halted`, `cancelled_at: <phase>`, `cancellation_reason: user_request`
-5. Clean up
+5. **Skip Phase 4b filing.** Partial reports never file beads — the work is incomplete by definition. Tell the user explicitly: "no beads filed because the run was halted." Silence here is ambiguous; an explicit notice isn't.
+6. Clean up
 
 The partial report is still useful — it tells you what was checked before you stopped, and what wasn't.
 
@@ -219,6 +249,8 @@ Per-agent attack methodology lives in `references/agents/<slug>.md`. **Load only
 
 **On proactive triggering.** When triggered proactively (not from a user trigger phrase), the plan card includes the **proactive trigger reason** — e.g., "Detected new public endpoint at `routes/api/v2/payments.ts`". The user can `defer` (records as a known unaudited surface, will not re-trigger on this surface for 24h) or `go`.
 
+**On tracker integration.** When beads is detected, Critical/High/Medium findings auto-file as `--type=bug` beads after the user `save`s the report; compound chains file as parent beads with `bd dep add` linkage. Existing security beads surface during recon so attackers don't re-report them. Full recipe in `references/tracker-integration.md`. Fails-safe — projects without beads behave identically to projects without any tracker awareness.
+
 ## Reference files
 
 - `references/agents/<slug>.md` — Per-agent attack methodology + spawn brief (load when writing that agent's spawn prompt)
@@ -226,3 +258,4 @@ Per-agent attack methodology lives in `references/agents/<slug>.md`. **Load only
 - `references/cwe-quick-ref.md` — Common CWE IDs mapped to attack surface for quick tagging
 - `references/recon-template.md` — Phase 1 brief format
 - `references/report-template.md` — Phase 4 markdown skeleton
+- `references/tracker-integration.md` — Beads detection, severity → priority map, finding-filing recipe, silent-promise guard, adapter contract

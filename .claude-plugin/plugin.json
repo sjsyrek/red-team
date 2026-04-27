@@ -1,6 +1,6 @@
 {
   "name": "red-team",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Adversarial security and robustness review. Spawn independent specialist attacker agents to find every way to break an application — vulnerabilities, logic flaws, race conditions, dependency risks, infrastructure misconfigs. The Incident Commander cross-correlates findings to surface compound risks no single agent would catch.",
   "author": {
     "name": "Steven Syrek",
