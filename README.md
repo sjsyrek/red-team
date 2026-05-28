@@ -91,10 +91,10 @@ Full recipe, severity → priority map, compound-chain semantics, and the adapte
 ## Slash command
 
 ```
-/red-team [scope]
+/red-team:red-team [scope]
 ```
 
-Optional `scope` argument narrows the review (e.g., `/red-team src/auth`). Without it, the entire repo is in scope.
+Optional `scope` argument narrows the review (e.g., `/red-team:red-team src/auth`). Without it, the entire repo is in scope.
 
 ## Output location
 

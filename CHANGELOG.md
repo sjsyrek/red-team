@@ -4,6 +4,14 @@ All notable changes to the red-team plugin are documented here. The format follo
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-05-28
+
+Documentation-only patch. The README "Slash command" section now shows the actual namespaced form (`/red-team:red-team`) instead of the bare form. Claude Code namespaces every plugin slash command as `/<plugin>:<command>` to avoid collisions across third-party plugins; the bare `/red-team` form (advertised since 0.1.0) was never a valid invocation.
+
+### Fixed
+
+- **README**: `/red-team [scope]` → `/red-team:red-team [scope]` in the Slash command section and example.
+
 ## [0.2.0] — 2026-04-27
 
 Beads tracker integration, mirroring the design-council pattern. Auto-detected and fails-safe — projects without beads behave identically to 0.1.0.
