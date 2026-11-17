@@ -1,6 +1,7 @@
 ---
 name: red-team
-description: Adversarial security and robustness review. Spawn independent specialist attacker agents to find every possible way to break an application — security vulnerabilities, logic flaws, race conditions, dependency risks, infrastructure misconfigs, and more. Use when the user says "red team this", "try to break it", "find vulnerabilities", "security audit", "attack surface", "what could go wrong", "pen test", or "stress test". Also triggers proactively (with plan-card pause for approval) when shipping code that handles authentication, payments, user-supplied input, external APIs, or sensitive data — even if the user didn't ask. Attack surface doesn't correlate with lines of code; invoke for small apps too. Do NOT skip when the user says "it's probably fine" — that's exactly when to run.
+description: Adversarial security and robustness review. Spawn independent specialist attacker agents to find every possible way to break an application — security vulnerabilities, logic flaws, race conditions, dependency risks, infrastructure misconfigs, and more. Use when the user says "red team this", "try to break it", "find vulnerabilities", "security audit", "attack surface", "what could go wrong", "pen test", or "stress test". Also offer it proactively (plan card first, never run unprompted) when shipping code that handles authentication, payments, user-supplied input, external APIs, or sensitive data. Attack surface doesn't correlate with lines of code, so small apps qualify.
+argument-hint: [scope-path]
 version: 0.2.1
 ---
 
@@ -11,13 +12,15 @@ A multi-agent adversarial review skill. Independent specialist agents attack the
 ## What the user sees
 
 1. **Plan card.** Before any agent spawns, the Commander shows a one-screen card: scope, roster (always-on plus opt-in seats with rationale for each opt-in), per-seat model, rough token/wall-clock budget. Reply `go`, `add llm-attacker`, `drop performance-attacker`, `narrow scope to src/auth`, or `abort`.
-2. **Handshake status.** After spawn: `HANDSHAKE: 8/8 ok | started=[...] | failed=[]`. Spawn health visible, not inferred.
+2. **Spawn status.** After spawn: `SPAWN: 8/8 ok | started=[...] | failed=[]`. Spawn health visible, not inferred.
 3. **Silent attack phase.** Agents run in parallel with no inter-agent communication. The Commander surfaces per-agent progress notifications.
 4. **Report preview.** Before any file is written, the Commander posts the draft report to chat. Reply `save`, `amend <note>`, or `discard`.
 5. **Output.** Final report at `~/.claude/red-team/<yyyy-mm-dd>-<slug>/report.md` (outside the repo under review).
-6. **Stop early.** Say "stop the red team" at any phase — Commander cancels in-flight agents, collects whatever findings are already in, writes a partial report with `status: halted` and `cancelled_at: <phase>`.
+6. **Stop early.** Say "stop the red team" at any phase — Commander stops in-flight agents, collects whatever findings are already in, writes a partial report with `status: halted` and `cancelled_at: <phase>`.
 
 ## When to invoke
+
+Invocation: `/red-team:red-team [scope-path]` or any trigger phrase. With no scope, the whole repository at the current working directory is in scope. With a path, narrow recon and the attack fan-out to that subtree — but still read `CLAUDE.md` and dependency manifests from the repo root, since trust boundaries and supply-chain risks cross subtree boundaries. Start at Phase 0 either way; an explicit invocation doesn't skip the plan card.
 
 Trigger phrases: "red team this", "try to break it", "find vulnerabilities", "security audit", "pen test", "attack surface", "what could go wrong", "stress test".
 
@@ -28,7 +31,7 @@ Trigger phrases: "red team this", "try to break it", "find vulnerabilities", "se
 - External API integrations with secrets in scope
 - New public endpoints
 
-Attack surface doesn't correlate with lines of code; invoke for small apps too. Do **not** skip when the user says "it's probably fine" — that's exactly when to run.
+Attack surface doesn't correlate with lines of code; small apps qualify. A user's "it's probably fine" is not a reason to skip the offer.
 
 **Do NOT invoke** for code-style review, doc-only changes, bug fixes that don't touch trust boundaries, or pure refactors. The token cost isn't earned.
 
@@ -44,7 +47,7 @@ Always-on:  input-attacker, auth-attacker, state-attacker,
             dependency-attacker, logic-attacker, infra-attacker,
             data-attacker, performance-attacker
 Opt-in:     [list with one-line rationale per seat]
-Models:     [per-seat — Opus default for synthesis-heavy, Sonnet for analytical]
+Models:     [per-seat model + effort — Opus for synthesis-heavy seats, Sonnet for analytical]
 Budget:     ~Nk tokens, ~M minutes wall-clock
 Output:     ~/.claude/red-team/<date>-<slug>/report.md
 
@@ -79,7 +82,7 @@ Brief format: see `references/recon-template.md`. Tracker enrichment recipe: `re
 
 ## Phase 2 — Attack fan-out (parallel)
 
-Spawn all selected agents simultaneously in **one multi-tool-call message** via `Agent(... run_in_background: true)`. Each agent receives:
+Spawn all selected agents in one message, one `Agent(subagent_type: "general-purpose", model: …, effort: …, description: "red-team: <slug>", prompt: …)` call per attacker. Subagents run in the background by default and their results arrive as notifications. Do not give attackers a `name`: when agent teams are enabled, a named spawn becomes a teammate that can message other agents, which breaks the isolation below. Each agent receives:
 
 - Its **role brief** loaded from `references/agents/<slug>.md`
 - A `Read` instruction for the recon brief at `~/.claude/red-team/<slug>/recon.md`
@@ -87,7 +90,7 @@ Spawn all selected agents simultaneously in **one multi-tool-call message** via 
 - Full tool access (file reads, bash, static analysis)
 - A **tracker-awareness rule** (when the recon brief contains a `## Known issues from tracker` section): before reporting any finding, check the listed beads. If your finding matches an existing bead, either skip it or report it with `chain_potential: true` and the bead id in the `evidence` field — never refile as a fresh finding.
 
-**Critical**: Agents do not communicate during this phase. Independence is the whole point. Shared context contaminates findings. Filing beads is a Commander-only action at Phase 4 save — attackers never call `bd`.
+Agents do not communicate during this phase. Independence is the whole point. Shared context contaminates findings. Filing beads is a Commander-only action at Phase 4 save — attackers never call `bd`.
 
 ### Finding schema
 
@@ -122,12 +125,12 @@ If an attacker finds nothing in its domain, it must emit one `info`-severity ent
 
 A clean check is a real result. Omission is ambiguous — did no agent check it, or did they check and find nothing?
 
-## Phase 2.5 — Handshake verify
+## Phase 2.5 — Spawn check
 
-After spawn, count incoming acknowledgements. Emit:
+Each `Agent` call returns either an agent ID or an error. Emit:
 
 ```
-HANDSHAKE: N/N ok | started=[...] | failed=[...]
+SPAWN: N/N ok | started=[...] | failed=[...]
 ```
 
 For any failed attacker:
@@ -201,7 +204,7 @@ Skipped when beads is not detected; the appendix entry is the only handle.
 
 User says "stop the red team" at any phase:
 
-1. Broadcast cancel to all in-flight agents
+1. Stop each still-running attacker with `TaskStop`
 2. Collect whatever findings are already in
 3. Skip cross-correlation (or run abbreviated version on whatever is collected)
 4. Write partial report with frontmatter `status: halted`, `cancelled_at: <phase>`, `cancellation_reason: user_request`

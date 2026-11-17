@@ -4,6 +4,19 @@ All notable changes to the red-team plugin are documented here. The format follo
 
 ## [Unreleased]
 
+### Changed
+
+- **Attackers spawn as unnamed background subagents** — `Agent(model: …, effort: …, prompt: …)`, one per attacker, in one message. `run_in_background` is no longer an `Agent` parameter (background is the default). The skill now says not to name attackers: with agent teams enabled, a named spawn becomes a teammate that can message other agents.
+- **Phase 2.5 is a spawn check, not a handshake.** Subagents don't message back; each `Agent` call returns an ID or an error. Status line is now `SPAWN: N/N ok | started=[...] | failed=[...]`; retry-once is unchanged.
+- **"Stop the red team" stops each in-flight attacker with `TaskStop`** instead of a broadcast.
+- **Plan card shows effort as well as model per seat.**
+- **Proactive triggering is an offer, stated plainly.** The description no longer tells Claude to run "even if the user didn't ask"; it offers the plan card on trust-boundary code and never runs unprompted (which the body already required).
+- **`tracker-integration.md`** describes the attackers as subagents instead of referring to the removed `TeamCreate` tool.
+
+### Removed
+
+- **`commands/red-team.md`.** The skill is already invocable as `/red-team:red-team`, so the command was a second copy listed alongside it. Its `argument-hint` and scope-narrowing rules moved into `SKILL.md`. The invocation is unchanged.
+
 ## [0.2.1] — 2026-05-28
 
 Documentation-only patch. The README "Slash command" section now shows the actual namespaced form (`/red-team:red-team`) instead of the bare form. Claude Code namespaces every plugin slash command as `/<plugin>:<command>` to avoid collisions across third-party plugins; the bare `/red-team` form (advertised since 0.1.0) was never a valid invocation.

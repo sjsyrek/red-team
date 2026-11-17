@@ -12,8 +12,8 @@ Red Team spawns each attacker as an **independent Claude agent with its own cont
 
 0. **Plan card (you confirm before anything spawns).** The Commander shows a one-screen card: scope, agent roster (always-on plus opt-in seats with rationale), rough token/wall-clock budget. You reply `go`, `add llm-attacker`, `drop performance-attacker`, `narrow scope to src/auth`, or `abort`.
 1. **Recon (Commander, single context).** The Commander scans the project: tech stack, entry points, data stores, trust boundaries, key dependencies, opt-in seat triggers. The recon brief lands in `~/.claude/red-team/<slug>/recon.md`. Every spawn prompt points to that path so the recon hits the prompt cache across parallel attacker spawns.
-2. **Attack fan-out (parallel).** In one multi-tool-call message, the Commander spawns every selected attacker via `Agent(... run_in_background: true)`. Each receives only its own role brief and the recon — **no inter-agent communication during the attack phase**. Independence is the whole point.
-3. **Handshake verify.** The Commander emits one structured line — `HANDSHAKE: 8/8 ok | started=[...] | failed=[]` — so spawn health is visible, not inferred.
+2. **Attack fan-out (parallel).** In one message, the Commander spawns every selected attacker as an unnamed background subagent (`Agent(model: …, effort: …, prompt: …)`). Each receives only its own role brief and the recon — **no inter-agent communication during the attack phase**. Independence is the whole point.
+3. **Spawn check.** The Commander emits one structured line — `SPAWN: 8/8 ok | started=[...] | failed=[]` — so spawn health is visible, not inferred.
 4. **Cross-correlation (Commander).** Findings flagged `chain_potential: true` are tested against each other. Auth bypass + data exfiltration → critical breach path. IDOR + privilege escalation → account takeover. Race condition + financial logic flaw → double-spend. Compound findings inherit a severity bump from the highest component finding.
 5. **Report preview + write.** The Commander posts the draft report to chat for `save` / `amend` / `discard`. On save: `~/.claude/red-team/<yyyy-mm-dd>-<slug>/report.md` (outside the repo under review).
 
@@ -111,7 +111,8 @@ The marketplace lives at [sjsyrek/claude-plugins](https://github.com/sjsyrek/cla
 
 ## Runtime requirements
 
-- `Agent` with `run_in_background: true` — spawns each attacker as an independent context
+- `Agent` with `model` and `effort` — spawns each attacker as an independent background subagent (background is the default)
+- `TaskStop` — stops in-flight attackers when you say "stop the red team"
 - File-system write access to `~/.claude/red-team/`
 
 Some package-audit tools (`npm audit`, `pip-audit`, `bundler-audit`, `govulncheck`) are invoked by `dependency-attacker` if available on the host — graceful degradation if absent.

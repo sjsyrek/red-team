@@ -131,7 +131,7 @@ The chain bead now blocks-on every component bead. Closing a component does not 
 
 ## Two-list discipline
 
-red-team does **not** call `TeamCreate` (attackers run as `Agent(... run_in_background: true)` with no inter-agent communication). There is no session-scoped task list at `~/.claude/teams/<team>/` to confuse with persistent beads.
+red-team does **not** use agent teams: attackers run as unnamed background subagents with no inter-agent communication. There is no session-scoped task list to confuse with persistent beads.
 
 This simplifies the discipline compared to design-council:
 
