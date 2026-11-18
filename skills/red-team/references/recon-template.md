@@ -77,6 +77,7 @@ From CLAUDE.md / user instruction:
 ## Notes
 
 - The recon must be **precise and bounded**. Vague entries leak into spawn prompts and produce sloppy findings.
+- Recon maps surfaces and trust boundaries; it does not list suspected vulnerabilities. Every attacker reads this file, so a suspicion written here becomes every attacker's starting point.
 - Trust boundaries are the single most important section. If you cannot draw a line between user-controlled and internal-only inputs, recon is incomplete — pause and ask the user before proceeding to fan-out.
 - The "Out of scope" section is enforceable: agents are instructed to ignore findings entirely contained in those areas.
 - The "Known issues from tracker" section is what prevents attackers from re-discovering already-filed bugs. When present, every attacker is instructed to skip findings that match a listed bead — or report them as `chain_potential` extensions referencing the existing bead's id, never as fresh findings.

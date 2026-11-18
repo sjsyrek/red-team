@@ -54,6 +54,8 @@ Output:     ~/.claude/red-team/<date>-<slug>/report.md
 Reply: go | add <seat> | drop <seat> | narrow scope to <path> | abort
 ```
 
+The plan card describes scope, surfaces and seats — not suspected vulnerabilities, even obvious ones. Finding things is the attackers' job; naming suspects here pre-empts the independent attack phase and, if they reach `recon.md`, anchors every attacker on the Commander's guesses.
+
 User commands:
 - `go` — proceed to Phase 1
 - `add <seat>` / `drop <seat>` — adjust roster
