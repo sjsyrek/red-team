@@ -1,0 +1,13 @@
+schema_version: "1.0"
+name: 10-e2e-small-roster
+description: End-to-end run with a pre-approved three-seat roster. Attackers spawn unnamed, the spawn check is reported, planted issues are found and cross-correlated, and the run stops at the report preview.
+tags: [tier2, e2e]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Red team this repo. The plan is pre-approved, so don't wait at the plan card: roster is exactly input-attacker, auth-attacker and dependency-attacker, all on Sonnet at low effort, scope is the whole repo. Run recon, the attack fan-out, and cross-correlation, then show me the draft report preview and stop there.
+  max_turns: 80
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Glob, Grep, Bash, Write, Agent, TaskStop]
+runs: 1

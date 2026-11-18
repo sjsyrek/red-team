@@ -1,0 +1,12 @@
+schema_version: "1.0"
+name: 02-slash-scope
+description: The slash command with a path narrows scope in the plan card but still reads root-level manifests (logic moved from the removed commands/ file).
+tags: [tier1, plan-card, slash]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: "/red-team:red-team src"
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Glob, Grep, Bash]
+runs: 3

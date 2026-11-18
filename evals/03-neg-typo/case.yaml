@@ -1,0 +1,12 @@
+schema_version: "1.0"
+name: 03-neg-typo
+description: Should NOT fire. A doc-only typo fix in a repo with security-relevant code must not invoke red-team.
+tags: [tier1, negative]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: "In CLAUDE.md, change \"Small internal orders API\" to \"Small internal order-management API\". Nothing else."
+  max_turns: 10
+  timeout_seconds: 300
+  allowed_tools: [Skill, Read, Edit, Glob, Grep]
+runs: 3

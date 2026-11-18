@@ -1,0 +1,12 @@
+schema_version: "1.0"
+name: 01-trigger-plan-card
+description: A trigger phrase on a small API invokes red-team, which stops at the Phase 0 plan card without spawning attackers.
+tags: [tier1, plan-card]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: "Red team this repo before we ship it."
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Glob, Grep, Bash]
+runs: 3
