@@ -4,6 +4,8 @@ All notable changes to the red-team plugin are documented here. The format follo
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-11-19
+
 ### Added
 
 - **Eval suite** (`evals/`) for `claude plugin eval`: plan-card, scoped slash command and should-not-fire cases, plus one end-to-end three-attacker run on a generated vulnerable app. `evals/results/` is gitignored. See `evals/README.md`.
@@ -17,13 +19,13 @@ All notable changes to the red-team plugin are documented here. The format follo
 - **Proactive triggering is an offer, stated plainly.** The description no longer tells Claude to run "even if the user didn't ask"; it offers the plan card on trust-boundary code and never runs unprompted (which the body already required).
 - **`tracker-integration.md`** describes the attackers as subagents instead of referring to the removed `TeamCreate` tool.
 
-### Fixed
-
-- **Plan card no longer lists suspected vulnerabilities.** The Commander described likely findings ("SQL injection in /users looks likely") before any attacker ran, pre-empting the independent attack phase. `SKILL.md` Phase 0 and `recon-template.md` now say the plan card and recon map surfaces and seats, not suspects. Found by the new eval suite.
-
 ### Removed
 
 - **`commands/red-team.md`.** The skill is already invocable as `/red-team:red-team`, so the command was a second copy listed alongside it. Its `argument-hint` and scope-narrowing rules moved into `SKILL.md`. The invocation is unchanged.
+
+### Fixed
+
+- **Plan card no longer lists suspected vulnerabilities.** The Commander described likely findings ("SQL injection in /users looks likely") before any attacker ran, pre-empting the independent attack phase. `SKILL.md` Phase 0 and `recon-template.md` now say the plan card and recon map surfaces and seats, not suspects. Found by the new eval suite.
 
 ## [0.2.1] — 2026-05-28
 

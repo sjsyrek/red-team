@@ -2,7 +2,7 @@
 name: red-team
 description: Adversarial security and robustness review. Spawn independent specialist attacker agents to find every possible way to break an application — security vulnerabilities, logic flaws, race conditions, dependency risks, infrastructure misconfigs, and more. Use when the user says "red team this", "try to break it", "find vulnerabilities", "security audit", "attack surface", "what could go wrong", "pen test", or "stress test". Also offer it proactively (plan card first, never run unprompted) when shipping code that handles authentication, payments, user-supplied input, external APIs, or sensitive data. Attack surface doesn't correlate with lines of code, so small apps qualify.
 argument-hint: [scope-path]
-version: 0.2.1
+version: 0.3.0
 ---
 
 # red-team
