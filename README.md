@@ -11,7 +11,7 @@ Red Team spawns each attacker as an **independent Claude agent with its own cont
 ## How it works
 
 0. **Plan card (you confirm before anything spawns).** The Commander shows a one-screen card: scope, agent roster (always-on plus opt-in seats with rationale), rough token/wall-clock budget. You reply `go`, `add llm-attacker`, `drop performance-attacker`, `narrow scope to src/auth`, or `abort`.
-1. **Recon (Commander, single context).** The Commander scans the project: tech stack, entry points, data stores, trust boundaries, key dependencies, opt-in seat triggers. The recon brief lands in `~/.claude/red-team/<slug>/recon.md`. Every spawn prompt points to that path so the recon hits the prompt cache across parallel attacker spawns.
+1. **Recon (Commander, single context).** The Commander scans the project: tech stack, entry points, data stores, trust boundaries, key dependencies, opt-in seat triggers. The recon brief lands in `~/.claude/red-team/<slug>/recon.md`. Every spawn prompt points to that path, so the Commander writes the recon once instead of inlining it into each spawn.
 2. **Attack fan-out (parallel).** In one message, the Commander spawns every selected attacker as an unnamed background subagent (`Agent(model: …, effort: …, prompt: …)`). Each receives only its own role brief and the recon — **no inter-agent communication during the attack phase**. Independence is the whole point.
 3. **Spawn check.** The Commander emits one structured line — `SPAWN: 8/8 ok | started=[...] | failed=[]` — so spawn health is visible, not inferred.
 4. **Cross-correlation (Commander).** Findings flagged `chain_potential: true` are tested against each other. Auth bypass + data exfiltration → critical breach path. IDOR + privilege escalation → account takeover. Race condition + financial logic flaw → double-spend. Compound findings inherit a severity bump from the highest component finding.
@@ -24,7 +24,7 @@ Red Team spawns each attacker as an **independent Claude agent with its own cont
 - **Genuine independence.** Each attacker is a separate Claude with its own context — no priming bleeds between offensive angles. You catch bugs the original author and a single-context reviewer would both miss.
 - **Compound-risk discovery.** The cross-correlation phase finds chains that no individual finding would surface. Two mediums combining into a critical is the most valuable output of this pattern.
 - **First-class beads tracker integration.** Findings file as `bd` beads with severity-mapped priority; existing security beads surface during recon so attackers don't refile known issues; chains link to component beads via `bd dep add`. See [Tracker integration](#tracker-integration) below.
-- **Cheap fan-out via prompt cache.** Recon brief written once, referenced by every spawn — identical reads hit the 5-minute prompt cache, recovering meaningful tokens on multi-attacker reviews.
+- **Recon written once.** The recon brief is a file every spawn reads, so the Commander writes it once rather than inlining it into each attacker's prompt.
 - **Clean checks are real results.** A domain with no findings is reported as a clean check, not omitted. You can distinguish "we looked here and it's solid" from "we never looked here."
 - **Severity rooted in exploitability**, not theoretical CVSS. A SQLi behind admin auth requiring a compromised admin is HIGH, not CRITICAL. An IDOR exposing PII with no auth is CRITICAL regardless of how "simple" the app is.
 
@@ -64,7 +64,7 @@ red-team integrates with **[beads](https://github.com/gastownhall/beads)** as a 
 
 When beads is detected at the start of a run (`test -d .beads || command -v bd`), four hooks fire:
 
-1. **Recon enrichment.** `bd memories` (security-keyword filtered), `bd ready`, and `bd show <id>` for any bead the user named are inlined into the shared `recon.md`. **Every attacker reads the recon**, so every attacker sees the tracker context — at zero per-spawn token cost beyond the first read (the rest hit the prompt cache). Attackers are instructed to skip findings that match an existing bead, or report them as `chain_potential` extensions referencing the bead's id, never as fresh findings. This is the single biggest win: no more re-filing the auth bypass that's already filed as `bd-83a`.
+1. **Recon enrichment.** `bd memories` (security-keyword filtered), `bd ready`, and `bd show <id>` for any bead the user named are inlined into the shared `recon.md`. **Every attacker reads the recon**, so every attacker sees the tracker context without the Commander repeating it in each spawn prompt. Attackers are instructed to skip findings that match an existing bead, or report them as `chain_potential` extensions referencing the bead's id, never as fresh findings. This is the single biggest win: no more re-filing the auth bypass that's already filed as `bd-83a`.
 
 2. **Skill self-audit.** The Commander reads `bd memories` for entries that name red-team itself plus the `Appendix — Emergent insights` from prior reports. **If a memory entry contradicts a prescription in `SKILL.md`, memory wins** — it was written after a real session failed; the skill text was written to prevent the next failure. The contradiction lands in `recon.md` and the report's emergent-insights appendix.
 

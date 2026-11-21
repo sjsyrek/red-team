@@ -1,6 +1,6 @@
 # Recon brief template
 
-The Commander writes this once, before any agent spawns. Lands at `~/.claude/red-team/<slug>/recon.md`. Every spawn prompt points to this path so identical reads hit the prompt cache across parallel attackers.
+The Commander writes this once, before any agent spawns. Lands at `~/.claude/red-team/<slug>/recon.md`. Every spawn prompt points to this path, so the recon is written once instead of inlined into each spawn.
 
 ## Format
 

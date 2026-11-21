@@ -20,7 +20,7 @@ Run from the invoking project's git root. Either succeeds → beads is this proj
 
 ### Phase 1 — Recon enrichment
 
-The Commander gathers tracker context **once** and inlines it into the shared `~/.claude/red-team/<slug>/recon.md`. Every attacker reads the recon, so every attacker sees the tracker context — at zero per-spawn token cost beyond the prompt-cache miss on first read.
+The Commander gathers tracker context **once** and inlines it into the shared `~/.claude/red-team/<slug>/recon.md`. Every attacker reads the recon, so every attacker sees the tracker context without it being repeated in each spawn prompt.
 
 ```bash
 # Security-relevant memories — keyword filter to stay bounded

@@ -78,7 +78,7 @@ Steps:
 3. Check for existing security documentation (threat models, prior audit reports, post-incident write-ups).
 4. Identify which opt-in seats apply.
 
-Write the brief to `~/.claude/red-team/<slug>/recon.md`. Every attacker's spawn prompt points to this path so identical reads hit the prompt cache across parallel spawns.
+Write the brief to `~/.claude/red-team/<slug>/recon.md`. Every attacker's spawn prompt points to this path, so you write the recon once instead of inlining it into each spawn.
 
 Brief format: see `references/recon-template.md`. Tracker enrichment recipe: `references/tracker-integration.md`.
 
