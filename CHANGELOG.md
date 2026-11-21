@@ -4,6 +4,8 @@ All notable changes to the red-team plugin are documented here. The format follo
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-11-21
+
 ### Fixed
 
 - **Recon rationale.** README, `SKILL.md`, `recon-template.md` and `tracker-integration.md` claimed the shared `recon.md` read hit the prompt cache across attackers; each attacker's prompt diverges (its own role brief) before that read, so the real saving is the Commander writing the recon once. Same correction as design-council 0.5.0.
